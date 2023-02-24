@@ -1,6 +1,4 @@
-import com.joojn.utils.FieldReflector;
 import com.joojn.utils.FileWrapper;
-import com.joojn.utils.JarUtil;
 import com.joojn.utils.MethodReflector;
 
 import java.io.IOException;
@@ -13,6 +11,7 @@ public class Test {
         testReflector();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void testFileUtil() throws IOException {
 
         String text = "Hello World!";
@@ -21,6 +20,7 @@ public class Test {
         file.write(text);
 
         String resultText = file.read();
+        file.delete();
 
         // assert text.equals(resultText);
         if(!text.equals(resultText))
@@ -39,7 +39,7 @@ public class Test {
                 .parameters(int.class, int.class)
                 .instance(text)
                 .build()
-                .invoke(text, shorten);
+                .invoke(0, shorten);
 
         if(!result.equals(text.substring(0, shorten)))
             throw new AssertionError("Texts are not equal!");
