@@ -1,19 +1,17 @@
 package com.joojn.utils.async;
 
+import java.util.function.Consumer;
+
 public class AsyncVoidTask {
 
-    public interface AsyncCallable {
-        void call() throws Exception;
-    }
-
     private Runnable promise = null;
+    private Consumer<Exception> errorPromise;
     private boolean called = false;
 
     private Thread thread;
     private Exception error;
 
-    public void then(Runnable promise) {
-        if(this.thread == null) this.thread = Thread.currentThread();
+    public AsyncVoidTask then(Runnable promise) {
 
         if(this.called)
         {
@@ -24,9 +22,25 @@ public class AsyncVoidTask {
         {
             this.promise = promise;
         }
+
+        return this;
     }
 
-    public void call() {
+    public AsyncVoidTask except(Consumer<Exception> errorPromise){
+        if(this.error != null)
+        {
+            errorPromise.accept(this.error);
+            this.error = null;
+        }
+        else
+        {
+            this.errorPromise = errorPromise;
+        }
+
+        return this;
+    }
+
+    public AsyncVoidTask call() {
         if(this.thread == null) this.thread = Thread.currentThread();
 
         if(this.promise != null)
@@ -37,9 +51,26 @@ public class AsyncVoidTask {
         {
             this.called = true;
         }
+
+        return this;
     }
 
-    public AsyncVoidTask callAsync(AsyncCallable callable) {
+    public AsyncVoidTask callError(Exception error) {
+        if(this.thread == null) this.thread = Thread.currentThread();
+
+        if(this.errorPromise != null)
+        {
+            this.errorPromise.accept(error);
+        }
+        else
+        {
+            this.error = error;
+        }
+
+        return this;
+    }
+
+    public AsyncVoidTask callAsync(VoidPromise callable) {
 
         this.thread = new Thread(() -> {
             try
@@ -49,8 +80,7 @@ public class AsyncVoidTask {
             }
             catch (Exception e)
             {
-                this.error = e;
-                e.printStackTrace();
+                callError(e);
             }
         });
 
@@ -67,19 +97,12 @@ public class AsyncVoidTask {
         }
         catch (InterruptedException e)
         {
-            this.error = e;
-            e.printStackTrace();
+            this.callError(e);
         }
     }
 
-    public boolean hasError()
-    {
-        return this.error != null;
-    }
-
-    public Exception getError()
-    {
-        return this.error;
+    public interface VoidPromise {
+        void call() throws Exception;
     }
 }
 
