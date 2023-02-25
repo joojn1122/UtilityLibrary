@@ -104,7 +104,7 @@ public class AsyncTask<T> {
         return this.value;
     }
 
-    interface AsyncCallable<T> {
+    public interface AsyncCallable<T> {
         T call() throws Exception;
     }
 }
